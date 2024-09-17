@@ -1,36 +1,69 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
+import seaborn as sns
+from sklearn.preprocessing import LabelEncoder
+
+# from sklearn.model_selection import train_test_split
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.metrics import classification_report
+
 
 # Load preprocessed data
-df = pd.read_csv('preprocessed_bank_data.csv')
+CUSTOMER_CHURN_DATA_XLSX = '../given/customer_churn_data.xlsx'
+df = pd.read_excel(CUSTOMER_CHURN_DATA_XLSX)
 
 # Calculate overall churn rate
 churn_rate = (df['Churn'] == 1).mean()
 print(f"Overall Churn Rate: {churn_rate:.2%}")
 
-# Analyze churn by tenure
-df['tenure_group'] = pd.cut(df['tenure in months'], bins=[0, 12, 24, 36, float('inf')], labels=['0-1 year', '1-2 years', '2-3 years', '3+ years'])
-churn_by_tenure = df.groupby('tenure_group')['Churn'].mean()
-churn_by_tenure.plot(kind='bar')
-plt.title('Churn Rate by Tenure')
-plt.show()
+# Preprocessing
+def preprocess_data(df):
+    # Convert 'Churn' and 'Credit Cards' to numerical
+    le = LabelEncoder()
+    df['Churn'] = le.fit_transform(df['Churn'])
+    df['Credit Cards'] = le.fit_transform(df['Credit Cards'])
+    
+    # Replace empty strings with NaN
+    df['Yearly Average Balance (USD)'] = df['Yearly Average Balance (USD)'].replace(' ', np.nan).fillna(df['Monthly Average Balance (USD)'].median(), inplace=True)
+    df['Monthly Average Balance (USD)'] = df['Monthly Average Balance (USD)'].replace(' ', np.nan).fillna(df['Monthly Average Balance (USD)'].median(), inplace=True)
+    # df['tenure in months'] = df['tenure in months'].replace(' ', np.nan)
+    # fill NaN
+    # df['Monthly Average Balance (USD)'].fillna(df['Monthly Average Balance (USD)'].median(), inplace=True)
+    # df['Yearly Average Balance (USD)'].fillna(df['Yearly Average Balance (USD)'].median(), inplace=True)
+    df['tenure in months'].fillna(df['tenure in months'].median(), inplace=True)
+    
+    return df
 
-# Feature importance using Random Forest
-X = df.drop(['customerID', 'Churn', 'Customer_Feedback'], axis=1)
-y = df['Churn']
+df = preprocess_data(df)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Correlation analysis
+correlation_matrix = df[['Churn', 'Monthly Average Balance (USD)', 'Yearly Average Balance (USD)', 'tenure in months', 'Credit Cards']].corr()
 
-rf = RandomForestClassifier(n_estimators=100, random_state=42)
-rf.fit(X_train, y_train)
+# Plotting
+plt.figure(figsize=(20, 16))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', vmin=-1, vmax=1, center=0)
+plt.title('Correlation Heatmap with Churn')
+plt.savefig('correlation_heatmap.png')
+plt.close()
 
-# Print feature importances
-for feature, importance in zip(X.columns, rf.feature_importances_):
-    print(f"{feature}: {importance:.4f}")
+# Individual feature analysis
+features = ['Monthly Average Balance (USD)', 'Yearly Average Balance (USD)', 'tenure in months', 'Credit Cards']
 
-# Model performance (for reference)
-y_pred = rf.predict(X_test)
-print(classification_report(y_test, y_pred))
+for feature in features:
+    plt.figure(figsize=(10, 6))
+    
+    if feature != 'Credit Cards':
+        # For numerical features
+        sns.boxplot(x='Churn', y=feature, data=df)
+        plt.title(f'{feature} vs Churn')
+    else:
+        # For categorical feature (Credit Cards)
+        sns.countplot(x='Credit Cards', hue='Churn', data=df)
+        plt.title('Credit Cards Ownership vs Churn')
+        plt.xlabel('Has Credit Cards')
+    
+    plt.savefig(f'{feature.lower().replace(" ", "_")}_vs_churn.png')
+    plt.close()
+
+print("complete..")
