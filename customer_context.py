@@ -8,7 +8,8 @@ def get_relevant_context(complaint: str, customer_data: Dict[str, any]) -> List[
     # Add account-related information for LLM context
     if "savings" in complaint.lower():
         context.append(f"Customer has a {'Zero Balance' if customer_data['Zero Balance Account'] == 'Yes' else 'Regular'} Savings Account.")
-        context.append(f"Monthly Average Balance: {customer_data['Monthly Average Balance']} dollars")
+        context.append(f"Monthly Average Balance: {customer_data['Monthly Average Balance (USD)']} dollars")
+        context.append(f"Yearly Average Balance: {customer_data['Yearly Average Balance (USD)']} dollars")
     if "loan" in complaint.lower() and customer_data['Loan Account'] == 'Yes':
         context.append("Customer has an active Loan Account.")
     if "credit" in complaint.lower() and customer_data['Credit Cards'] == 'Yes':
@@ -25,20 +26,15 @@ def get_relevant_context(complaint: str, customer_data: Dict[str, any]) -> List[
     
     return context
 
-def generate_prompt(complaint: str, row: pd.Series, row_index: int) -> str:
+def generate_prompt(complaint: str, row: pd.Series) -> str:
 
     customer_data = row.to_dict()
     context = get_relevant_context(complaint, customer_data)
     
     prompt = f"""
-            Instructions: Respond to the customer's complaint in a polite, professional manner. Provide helpful information, clarify any misunderstandings, and offer potential solutions or next steps.
-
-            If the complaint relates to a specific account or service, provide relevant details and guidance. For example:
-            - Savings account: Explain features, fees, interest rates.
-            - Online banking: Troubleshoot technical issues, highlight useful features.
-
-            Maintain a friendly, empathetic tone. Avoid dismissive language. Aim to resolve the complaint while representing the bank's commitment to excellent customer service.
-
+            Instructions: Respond to the customer's complaint in a polite manner.
+            Maintain a friendly tone. Avoid dismissive language.
+            Be strictly very concise in your response and respond saying to forward it to the relevant team.
             Customer Complaint: "{complaint}"
             Customer complaint category type: "{categorize_query(complaint)}"
 

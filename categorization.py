@@ -21,7 +21,7 @@ def categorize_query(query: str) -> Union[QueryCategory, None]:
             )
         
         llm_response = response.choices[0].message.content
-        print(llm_response)
+        # print(llm_response)
         return process_category_response(llm_response)
     except Exception as e:
         print(f"Error calling LLM API: {str(e)}")

@@ -9,7 +9,7 @@ df = pd.read_excel(CUSTOMER_CHURN_DATA_XLSX)
 client = get_openai_client()
 
 # iterate
-for index, row in df.iterrows():
+for index, row in df.head(50).iterrows():
     customer_feedback = str(row['Customer_Feedback'])
     
     # Generate the prompt for the LLM
@@ -26,7 +26,7 @@ for index, row in df.iterrows():
         
         final_response = response.choices[0].message.content
     except Exception as e:
-        print(f"Error calling LLM API: {str(e)}")
+        print(f"Error calling API: {str(e)}")
     
     # Store the response in the 'Chatbot Response' column
     df.at[index, 'Chatbot Response'] = final_response

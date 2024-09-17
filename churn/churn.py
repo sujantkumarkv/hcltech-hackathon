@@ -25,12 +25,12 @@ def preprocess_data(df):
     df['Credit Cards'] = le.fit_transform(df['Credit Cards'])
     
     # Replace empty strings with NaN
-    df['Yearly Average Balance (USD)'] = df['Yearly Average Balance (USD)'].replace(' ', np.nan).fillna(df['Monthly Average Balance (USD)'].median(), inplace=True)
-    df['Monthly Average Balance (USD)'] = df['Monthly Average Balance (USD)'].replace(' ', np.nan).fillna(df['Monthly Average Balance (USD)'].median(), inplace=True)
+    df['Yearly Average Balance (USD)'] = df['Yearly Average Balance (USD)'].replace(' ', np.nan)
+    df['Monthly Average Balance (USD)'] = df['Monthly Average Balance (USD)'].replace(' ', np.nan)
     # df['tenure in months'] = df['tenure in months'].replace(' ', np.nan)
     # fill NaN
-    # df['Monthly Average Balance (USD)'].fillna(df['Monthly Average Balance (USD)'].median(), inplace=True)
-    # df['Yearly Average Balance (USD)'].fillna(df['Yearly Average Balance (USD)'].median(), inplace=True)
+    df['Monthly Average Balance (USD)'].fillna(df['Monthly Average Balance (USD)'].median(), inplace=True)
+    df['Yearly Average Balance (USD)'].fillna(df['Yearly Average Balance (USD)'].median(), inplace=True)
     df['tenure in months'].fillna(df['tenure in months'].median(), inplace=True)
     
     return df
