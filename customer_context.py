@@ -1,8 +1,9 @@
 import pandas as pd
 from typing import Dict, List
+from categorization import categorize_query
+
 
 def get_relevant_context(complaint: str, customer_data: Dict[str, any]) -> List[str]:
-    
     context = []
     # Add account-related information for LLM context
     if "savings" in complaint.lower():
@@ -24,18 +25,28 @@ def get_relevant_context(complaint: str, customer_data: Dict[str, any]) -> List[
     
     return context
 
-def generate_prompt(complaint: str, customer_df: pd.DataFrame, row_index: int) -> str:
-    ustomer_data = customer_df.iloc[row_index].to_dict()
+def generate_prompt(complaint: str, row: pd.Series, row_index: int) -> str:
+
+    customer_data = row.to_dict()
     context = get_relevant_context(complaint, customer_data)
     
     prompt = f"""
-    Customer Complaint: "{complaint}"
-    
-    Relevant Customer Information:
-    {chr(10).join(context)}
+            Instructions: Respond to the customer's complaint in a polite, professional manner. Provide helpful information, clarify any misunderstandings, and offer potential solutions or next steps.
 
-    If more information is needed, suggest and ask appropriate follow-up questions.
-    """
+            If the complaint relates to a specific account or service, provide relevant details and guidance. For example:
+            - Savings account: Explain features, fees, interest rates.
+            - Online banking: Troubleshoot technical issues, highlight useful features.
+
+            Maintain a friendly, empathetic tone. Avoid dismissive language. Aim to resolve the complaint while representing the bank's commitment to excellent customer service.
+
+            Customer Complaint: "{complaint}"
+            Customer complaint category type: "{categorize_query(complaint)}"
+
+            Relevant Customer Information:
+            {chr(10).join(context)}
+
+            {{ If more details are needed, suggest follow-up questions here }}
+            """
     
     return prompt.strip()
 
